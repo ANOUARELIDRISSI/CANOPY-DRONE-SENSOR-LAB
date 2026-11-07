@@ -28,6 +28,8 @@ CSV_FIELDS = [
     "scenario",
     "protocol",
     "distance_m",
+    "link_range_m",
+    "delivery_delay_ms",
     "status",
     *FEATURES,
     "fire_present",
@@ -152,8 +154,12 @@ class StreamSession:
                 self.batch_writer = csv.DictWriter(self.batch_handle, fieldnames=CSV_FIELDS)
                 self.batch_writer.writeheader()
             assert self.batch_writer is not None
-            self.batch_writer.writerow(row)
-            self.writer.writerow(row)
+            csv_row = row.copy()
+            for feature in FEATURES:
+                if csv_row[feature] is None:
+                    csv_row[feature] = "NaN"
+            self.batch_writer.writerow(csv_row)
+            self.writer.writerow(csv_row)
             self.latest[row["sensor_id"]] = row
             self.counts["received"] += 1
             self.drone_counts[row["drone_id"]] += 1
@@ -259,7 +265,7 @@ class StreamSession:
             "synthetic": True,
             "mode": "live",
             "generator_version": 1,
-            "schema_version": 2,
+            "schema_version": 3,
             "environment": self.environment.to_dict(),
             "drone_count": self.drone_count,
             "collector_policy": "nearest drone; one attempt per sensor sample",

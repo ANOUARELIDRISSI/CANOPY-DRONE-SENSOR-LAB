@@ -55,7 +55,7 @@ def aggregate(raw_path: Path, output: Path) -> pd.DataFrame:
         .reset_index(drop=True)
     )
     output.mkdir(parents=True, exist_ok=True)
-    frame.to_csv(output / "readings.csv", index=False)
+    frame.to_csv(output / "readings.csv", index=False, na_rep="NaN")
     summary = frame.groupby(["run_id", "sensor_id", "protocol"])[FEATURES].agg(
         ["count", "mean", "min", "max"]
     )

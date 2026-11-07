@@ -151,6 +151,8 @@ class SensorTour:
                 "scenario": scenario,
                 "fire_present": label,
                 "distance_m": round(distance, 4),
+                "link_range_m": link.range_m,
+                "delivery_delay_ms": round(duration * 1000, 3) if status == "received" else None,
                 "status": status,
                 "received_s": step * 2 + duration,
                 "payload": payload if status == "received" else None,
