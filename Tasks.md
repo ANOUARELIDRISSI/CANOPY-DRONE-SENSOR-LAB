@@ -24,11 +24,4 @@ docker compose restart viewer
 ~~~
 Record each fit's output path before training the next model. Restarting the viewer loads the most recently published model. New batch jobs choose a new seed by default. Do not train on the three-tour starter session alone. See the [Compose runbook](docs/COMPOSE.md) for file locations and camera instructions. DuckDB, Parquet ingestion and the Spark consumer are student implementations, not preconfigured services.
 
-## Final report and marking guide (100 points)
-1. Data lineage and quality (20): schema, units, file inventory, reconciliation SQL, packet-loss denominator and anomaly examples.
-2. Streaming (20): diagram, checkpoint/restart transcript and evidence of equivalence to batch output.
-3. Classification (25): split manifest, feature choices, baseline, model/cutoff selection, held-out metrics and errors.
-4. Incident scoring (20): decision table, camera outage and early-fire cases, event latency and one false alarm investigation. If no camera is available, replay scripted visual evidence and identify it as such.
-5. Reproducibility and interpretation (15): documented commands, screenshots, CPU timing, limitations and a teammate's reproduction notes. Include a five-minute demonstration from raw reading to alert.
 
-For a distinction, compare changed environments or assess a licensed real dataset for sensor compatibility. Explain whether the experiment supports the conclusion; a high synthetic score alone does not validate a real alarm.
