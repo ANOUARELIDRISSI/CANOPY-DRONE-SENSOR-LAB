@@ -1,21 +1,17 @@
-# Canopy drone simulator
+# Canopy Drone Sensor Lab
 
-Build a 3D field, follow a drone around its tour, and export the sensor readings it receives. Each station measures temperature, humidity, smoke and carbon monoxide. A fleet can collect multiple tours in one session.
+Canopy lets you build a 3D drone simulation that collects environmental readings as a fleet flies over sensor stations. You can follow the flight live and download the measurements each drone receives.
 
-## Build and open the viewer
+| What you can build | How it works |
+|---|---|
+| A configurable 3D field | Choose a forest, meadow or desert, place 6–60 stations on a grid, and run one or more tours with up to eight drones. |
+| A fleet collection demo | Drones start at different points on the same zigzag circuit. Select a drone, follow it around the field, and zoom in as it passes a station. |
+| A wireless coverage experiment | Each station attempts to send temperature, humidity, smoke and carbon monoxide readings to the nearest drone. Compare delivery across simulated Bluetooth (35 m), Wi-Fi (100 m) and proprietary radio (160 m) as you vary fleet size or field width. |
+| A live sensor dataset | Watch readings arrive during a flight. Download one CSV per session with the tour, station, collecting drone, protocol, distance, sample and arrival times, and measurements. |
+| A repeatable scenario comparison | Run normal, fire and nuisance scenarios. Record the seed and field settings, then change one setting at a time to compare readings and coverage across tours. |
 
-With Docker Compose running, use these commands from a terminal:
+## Run a collection
 
-~~~sh
-git clone --branch main https://github.com/ANOUARELIDRISSI/CANOPY-DRONE-SENSOR-LAB.git
-cd CANOPY-DRONE-SENSOR-LAB
-docker compose up --build -d --wait
-~~~
+From the repository root, run `docker compose up --build -d --wait` and open the [3D viewer](http://127.0.0.1:8765). Preview the field, start collection, and use **Download CSV** after the last tour. A [completed session CSV](data/starter/readings.csv) shows the output format.
 
-Open the [3D viewer](http://127.0.0.1:8765). Choose an environment, set the number of drones and tours, then preview the field. Start collection, select a drone and use **Follow** to track it. Scroll to zoom or drag to orbit.
-
-## Collect a CSV
-
-Use **Download CSV** during a flight to inspect readings delivered so far, or after the final tour for the full session. Compose also saves the file to `artifacts/live/<session>/readings.csv` on the host. For an example from a completed flight, open the [sample CSV](data/starter/readings.csv).
-
-Follow the [collection checklist](Tasks.md) for a reproducible run. The [simulator guide](docs/SIMULATOR.md) explains the route, fleet movement, radio ranges and output files. To stop the containers, run `docker compose down` from the repository root.
+The viewer renders a [Crazyflie drone mesh](https://github.com/learnsyslab/gym-pybullet-drones) using Three.js. The optional camera view includes an unmodified reference photograph from [LibreYOLO/fire-smoke-seg](https://huggingface.co/datasets/LibreYOLO/fire-smoke-seg), licensed under [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
