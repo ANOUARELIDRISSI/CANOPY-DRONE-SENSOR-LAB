@@ -1,0 +1,51 @@
+{
+  "synthetic": true,
+  "mode": "live",
+  "generator_version": 1,
+  "schema_version": 2,
+  "environment": {
+    "preset": "forest",
+    "width_m": 220,
+    "sensor_count": 12,
+    "vegetation": 70,
+    "height_m": 160.0,
+    "temperature_offset_c": 0.0,
+    "humidity_offset_pct": 0.0
+  },
+  "drone_count": 2,
+  "collector_policy": "nearest drone; one attempt per sensor sample",
+  "seed": 4016078588,
+  "runs": 3,
+  "steps": 30,
+  "scenario": "mixed",
+  "status": "completed",
+  "counts": {
+    "received": 589,
+    "lost": 44,
+    "out_of_range": 447,
+    "duplicates": 5
+  },
+  "elapsed_s": 180.0,
+  "sample_interval_s": 2,
+  "pending_not_delivered": 0,
+  "links": {
+    "bluetooth": {
+      "range_m": 35,
+      "bitrate_bps": 125000,
+      "delay_ms": 25,
+      "loss": 0.08
+    },
+    "wifi": {
+      "range_m": 100,
+      "bitrate_bps": 6000000,
+      "delay_ms": 8,
+      "loss": 0.03
+    },
+    "proprietary": {
+      "range_m": 160,
+      "bitrate_bps": 9600,
+      "delay_ms": 90,
+      "loss": 0.12
+    }
+  }
+}

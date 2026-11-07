@@ -32,6 +32,7 @@ async function processFrame(source, tag, caption) {
   }
   $('status').textContent = caption + ' · CPU ' + data.processing_ms + ' ms';
   $('result').textContent = data.detections.length ? data.detections.map(d=>d.label+' '+Math.round(d.score*100)+'%').join(', ') : 'No flame or smoke detected in this frame.';
+  return data.detections;
 }
 function loop(tag, capture) {
   async function next() {
@@ -79,7 +80,7 @@ $('drone').onclick = () => {
       viewerWindow.postMessage({type:'drone-frame',id},viewerOrigin);
     }).finally(()=>{clearTimeout(timeout);pending=null;});
     const image=await createImageBitmap(reply.blob);
-    try {await processFrame(image,tag,'Drone '+(reply.drone+1)+' · tour '+(reply.run+1)+' · '+reply.time+' s');} finally {image.close();}
+    try {const detected = await processFrame(image,tag,'Drone '+(reply.drone+1)+' · tour '+(reply.run+1)+' · '+reply.time+' s'); if(tag===generation && detected) viewerWindow.postMessage({type:'drone-score',id,visible:detected.length>0},viewerOrigin);} finally {image.close();}
   });
 };
 

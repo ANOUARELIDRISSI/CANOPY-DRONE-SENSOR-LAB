@@ -1,5 +1,7 @@
 # Validation record — 7 November 2026
 
+Native Python and npm commands in this guide run from the `simulation/` directory.
+
 Executed locally on Windows with Python 3.12.4 and uv. Exact Python dependencies are in `uv.lock`; Three.js is pinned by `package-lock.json` and vendored into the viewer. Results below are measured, not expected targets.
 
 ## Batch generation and training

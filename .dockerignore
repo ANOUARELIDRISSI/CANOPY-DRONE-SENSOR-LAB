@@ -1,9 +1,9 @@
 **
-!pyproject.toml
-!uv.lock
-!src/
-!src/**
-!docker/
-!docker/Dockerfile
+!Dockerfile
+!simulation/
+!simulation/pyproject.toml
+!simulation/uv.lock
+!simulation/src/
+!simulation/src/**
 **/__pycache__/
 **/*.pyc

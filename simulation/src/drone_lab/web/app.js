@@ -1,3 +1,4 @@
+import { scoreIncident } from './score.mjs';
 import { FieldScene, palette } from './scene.js?v=vision1';
 
 const $ = id => document.getElementById(id);
@@ -28,6 +29,16 @@ function cameraLabel() {
   $('camera-mode').textContent = field.cameraControl.following
     ? `Following drone ${field.selected + 1} · drag / zoom stays yours`
     : 'Free orbit · wheel/pinch to zoom';
+}
+let frameTicket = null, visual = null;
+function renderScore(state) {
+  const visible = visual && visual.session === state.session && visual.run === state.run_id &&
+    visual.drone === field.selected && Date.now() - visual.captured < 5000 &&
+    state.elapsed_s - visual.elapsed <= 5;
+  const score = scoreIncident(state.stations, visible);
+  $('decision').textContent = state.session ? score.label + ' (' + score.level + '/3)' : 'AWAITING DATA';
+  $('reason').textContent = state.session ? score.reason : 'Start the fleet to collect readings.';
+  document.querySelector('.decision-panel').className = 'panel decision-panel ' + (score.level >= 2 ? 'alarm' : score.level === 0 ? 'clear' : '');
 }
 function applyState(state, isPreview = false) {
   if (previewing && !isPreview && state.status !== 'running') return;
@@ -61,14 +72,8 @@ function applyState(state, isPreview = false) {
   $('session').textContent = preview ? 'A new dataset is created when collection starts.' : `artifacts/live/${state.session}/readings.csv`;
   const fresh = state.stations.filter(s => s.age_s != null && s.age_s <= 30);
   const alarms = state.stations.filter(s => s.decision === 'ALARM');
-  const uncertain = state.stations.some(s => s.decision === 'WARNING');
   $('fresh').textContent = fresh.length; $('alarms').textContent = alarms.length;
-  $('decision').textContent = preview ? 'AWAITING DATA' : alarms.length ? 'ALARM' : uncertain ? 'WARNING' : 'NO ALARM';
-  document.querySelector('.decision-panel').className = `panel decision-panel ${alarms.length ? 'alarm' : uncertain ? '' : 'clear'}`;
-  $('reason').textContent = preview ? 'Preview your environment, then start the fleet.' : alarms.length
-    ? 'Fire-like measurements at fresh stations. Inspect the highlighted readings.' : uncertain
-    ? 'Some stations are unvisited, stale or missing a measurement. Continue collection.'
-    : 'Fresh complete measurements are below the learned alarm cutoff.';
+  renderScore(state);
   $('link-stats').innerHTML = Object.entries(state.links).map(([name, counts]) => `<div class="link-row"><b style="color:#${palette[name].toString(16)}">${name === 'proprietary' ? 'Custom' : name === 'wifi' ? 'WiFi' : 'Bluetooth'}</b><small>${counts.received.toLocaleString()} received · ${counts.lost} lost</small></div>`).join('');
   $('readings').innerHTML = state.stations.map(s => {
     const r = s.reading, key = r ? `${state.session}:${r.run_id}:${r.sequence}:${r.drone_id}` : null;
@@ -133,14 +138,23 @@ $('open-camera').onclick = async () => {
   }
 };
 $('close-camera').onclick = () => $('camera-panel').close();
-$('camera-panel').onclose = () => { cameraWindow = null; $('camera-frame').src = 'about:blank'; };
+$('camera-panel').onclose = () => { visual = frameTicket = null; if(current) renderScore(current); cameraWindow = null; $('camera-frame').src = 'about:blank'; };
 window.addEventListener('message', async event => {
-  if (!cameraWindow || event.source !== cameraWindow || event.origin !== cameraOrigin ||
-      event.data?.type !== 'drone-frame') return;
+  if (!cameraWindow || event.source !== cameraWindow || event.origin !== cameraOrigin) return;
+  if (event.data?.type === 'drone-score') {
+    if (!frameTicket || frameTicket.id !== event.data.id) return;
+    visual = event.data.visible === true ? frameTicket : null;
+    frameTicket = null;
+    if(current) renderScore(current);
+    setTimeout(() => { if(current) renderScore(current); }, 5000);
+    return;
+  }
+  if(event.data?.type !== 'drone-frame') return;
   const id = event.data.id;
   try {
     if (!current?.session) throw new Error('Start a collection to use the drone camera.');
     const drone = field.selected, run = current.run_id, time = current.time_s;
+    frameTicket = {id, session:current.session, run, drone, elapsed:current.elapsed_s, captured:Date.now()};
     const blob = await field.captureDroneFrame();
     cameraWindow.postMessage({id, blob, drone, run, time}, cameraOrigin);
   } catch (error) { cameraWindow.postMessage({id, error:error.message}, cameraOrigin); }

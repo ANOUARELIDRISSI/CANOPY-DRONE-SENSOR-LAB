@@ -1,5 +1,7 @@
 # Live 3D drone and streaming dataset
 
+Native Python and npm commands in this guide run from the `simulation/` directory.
+
 ## Run
 
 From the project root:

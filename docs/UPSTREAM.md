@@ -1,5 +1,7 @@
 # UavNetSim investigation
 
+Native Python and npm commands in this guide run from the `simulation/` directory.
+
 Source: [Zihao-Felix-Zhou/UavNetSim](https://github.com/Zihao-Felix-Zhou/UavNetSim). The older `UavNetSim-v1` URL redirects to this project. The tested checkout is `c2703f24eb58cdb557a5f67ded5c7b0368a964ed`, package version 2.0.0, MIT license. Its current purpose is UAV network simulation; it does not provide this lab's sensor-fire dataset pipeline out of the box.
 
 The local checkout is under ignored `external/UavNetSim-v1`; no upstream source has been copied into the teaching package. The main lab does not import it. Its own environment is separate from the lab environment.

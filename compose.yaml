@@ -3,7 +3,7 @@ x-lab: &lab
   image: drone-sensor-lab:local
   build:
     context: .
-    dockerfile: docker/Dockerfile
+    dockerfile: Dockerfile
     target: lab
   volumes:
     - ./artifacts:/app/artifacts
@@ -43,7 +43,7 @@ services:
     image: drone-sensor-camera:local
     build:
       context: .
-      dockerfile: docker/Dockerfile
+      dockerfile: Dockerfile
       target: camera
     volumes:
       - ./artifacts:/app/artifacts

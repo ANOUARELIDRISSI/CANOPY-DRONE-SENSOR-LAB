@@ -4,13 +4,15 @@ A runnable teaching baseline for **Real-Time Dashboard for Drone-Collected Data:
 
 The default scenario is forest-fire detection. Flood prediction is a student extension, not an implemented feature. No real drone, Bluetooth adapter, WiFi radio, ROS, Gazebo or database is needed. A live 3D viewer now uses the Crazyflie mesh from gym-pybullet-drones and streams newly generated sensor data into CSV.
 
+Start with the [project overview](PROJECT_OVERVIEW.md), [student tasks and report](Tasks.md), and [Python practices](python_skill.md).
+
 ## Docker Compose
 
 Run `docker compose --profile camera up --build -d` from this folder. Open the viewer and click **Camera view**. See [the Compose guide](docs/COMPOSE.md) for batch collection, classifier selection, camera controls and model updates.
 
 ## Live 3D drone and streaming CSV
 
-After generating the first model with the command below, run:
+For all native uv/npm commands, work inside simulation/. Docker Compose commands run at the repository root. After generating the first model with the command below, run:
 
 ```powershell
 uv run drone-live --model artifacts/demo/model.joblib --port 8765
@@ -35,15 +37,16 @@ Drones start at different points on the same closed route. Each station attempts
 Prerequisites: Git and [uv](https://docs.astral.sh/uv/getting-started/installation/). Commands below work in PowerShell from the project root. Python 3.12 is selected by `.python-version`.
 
 ```powershell
-git clone --branch anouar00 --single-branch https://github.com/Hananeaoujil/real-time-dashboad-for-drone-collected-data-aggregation-and-analytics-.git
+git clone --branch main --single-branch https://github.com/Hananeaoujil/real-time-dashboad-for-drone-collected-data-aggregation-and-analytics-.git
 cd real-time-dashboad-for-drone-collected-data-aggregation-and-analytics-
+cd simulation
 uv python install 3.12
 uv sync --locked --all-groups
 uv run drone-lab --runs 90 --steps 120 --seed 42 --output artifacts/demo
 uv run drone-live --model artifacts/demo/model.joblib --port 8765
 ```
 
-This version is on branch `anouar00`. Open **http://127.0.0.1:8765**, click **Start collection**, then **Follow**. Use **Prepare 15 mixed tours** to collect a labeled training CSV. Stop the server with Ctrl+C.
+This version is on branch `main`. Open **http://127.0.0.1:8765**, click **Start collection**, then **Follow**. Use **Prepare 15 mixed tours** to collect a labeled training CSV. Stop the server with Ctrl+C.
 
 Generated datasets, trained models, virtual environments and external repository clones are excluded from Git. The generation command above creates the first model locally. The required 3D mesh and JavaScript libraries are included, so Node.js, npm and the external simulator clones are not needed to run the viewer.
 
@@ -89,15 +92,15 @@ flowchart LR
 
 | Path | Purpose |
 |---|---|
-| `src/drone_lab/simulation.py` | Sensors, latent events, route, link parameters and encoders |
-| `src/drone_lab/aggregation.py` | Payload decoding, units, schema bounds, deduplication, summaries |
-| `src/drone_lab/analytics.py` | Run split, training, validation cutoff, test metrics and `predict()` |
-| `src/drone_lab/visuals.py` | Export route, signals, link outcomes and confusion matrix |
-| `src/drone_lab/streaming.py` | Incremental producer, arrival queue, CSV writer and state snapshots |
-| `src/drone_lab/server.py` | Local API, SSE streaming, start/stop and downloads |
-| `src/drone_lab/web/` | 3D drone, forest, station markers and telemetry controls |
-| `dashboard.py` | Streamlit replay with moving drone and current station status |
-| `tests/` | Behavior and integration checks |
+| `simulation/src/drone_lab/simulation.py` | Sensors, latent events, route, link parameters and encoders |
+| `simulation/src/drone_lab/aggregation.py` | Payload decoding, units, schema bounds, deduplication, summaries |
+| `simulation/src/drone_lab/analytics.py` | Run split, training, validation cutoff, test metrics and `predict()` |
+| `simulation/src/drone_lab/visuals.py` | Export route, signals, link outcomes and confusion matrix |
+| `simulation/src/drone_lab/streaming.py` | Incremental producer, arrival queue, CSV writer and state snapshots |
+| `simulation/src/drone_lab/server.py` | Local API, SSE streaming, start/stop and downloads |
+| `simulation/src/drone_lab/web/` | 3D drone, forest, station markers and telemetry controls |
+| `simulation/dashboard.py` | Streamlit replay with moving drone and current station status |
+| `simulation/tests/` | Behavior and integration checks |
 | `docs/SCENARIO.md` | Exact assumptions, units and interpretation |
 | `docs/VALIDATION.md` | Commands executed, measured results and limitations |
 | `docs/UPSTREAM.md` | Optional UavNetSim clone and tested analytical-mode command |
