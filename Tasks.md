@@ -1,4 +1,4 @@
-# Student assignment: from collected readings to a live fire alert
+# Assignment: from collected readings to a live fire alert
 
 Start with [data/starter/readings.csv](data/starter/readings.csv), its [manifest](data/starter/manifest.json) and its [per-tour batches](data/starter/batches/). These are two representations of the same session: 2 drones, 3 mixed tours, 589 delivered readings. This is an inspection and streaming fixture, not enough independent tours for classifier evaluation. Read [the project overview](PROJECT_OVERVIEW.md) and [Python practices](python_skill.md). For Docker commands work at the repository root; for native uv commands work in simulation/.
 
