@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Canopy • Live Drone Lab</title>
+  <link rel="stylesheet" href="/style.css">
+  <script type="importmap">{"imports":{"three":"/vendor/three.module.js","three/addons/":"/vendor/"}}</script>
+</head>
+<body>
+<header><div class="brand"><span class="brand-icon">⌘</span><div>CANOPY<span class="subtitle">DRONE SENSOR LAB</span></div></div>
+  <div class="header-note">FOREST OBSERVATION / EXPERIMENT 01</div><div id="connection" class="pill">CONNECTING</div></header>
+<main>
+  <div class="intro"><div><div class="eyebrow">LIVE COLLECTION</div><h1>A flight through the data.</h1><p>A 3D drone tour, heterogeneous sensors, and a dataset built as packets arrive.</p></div><div class="synthetic">SIMULATED ENVIRONMENT<br><span>Real streaming · synthetic measurements</span></div></div>
+  <section class="controls" aria-label="Experiment controls">
+    <label>SCENARIO<select id="scenario"><option value="fire">Growing fire</option><option value="normal">Normal conditions</option><option value="nuisance">Nuisance smoke</option><option value="mixed">Mixed / training dataset</option></select></label>
+    <label>TOURS<input id="runs" type="number" min="1" max="300" value="1"></label>
+    <label>SEED<input id="seed" type="number" min="0" max="4294967295" value="42"></label>
+    <label>SPEED<select id="speed"><option value="1">1× real time</option><option value="4" selected>4×</option><option value="16">16×</option><option value="64">64× accelerated</option></select></label>
+    <button id="start" class="primary">Start collection <span>↗</span></button><button id="stop" disabled>Stop</button>
+    <a id="download" class="download disabled" href="/api/download/readings.csv" download>↓ Download CSV</a>
+  </section>
+  <div id="error" role="alert" hidden></div>
+  <section class="workspace">
+    <div class="scene-card"><div class="scene-header"><div><span class="dot"></span> FIELD VIEW <span class="muted">/ 220 × 160 m</span></div><div class="view-buttons"><button id="overview">Overview</button><button id="follow">Follow drone</button></div></div>
+      <div id="scene" role="img" aria-label="Interactive 3D drone flying over twelve sensor stations"></div>
+      <div class="scene-overlay"><div class="pill" id="flight-state">READY TO FLY</div><h2 id="tour-label">Tour 01</h2><div id="position-label">Fixed collection route</div></div>
+      <div class="scene-footer"><span id="model-status">Loading Crazyflie model…</span><span>Drag to orbit · scroll to zoom</span></div>
+      <div class="legend"><span><i style="background:#51ccff"></i>Bluetooth · 35 m</span><span><i style="background:#ffbe6b"></i>WiFi · 100 m</span><span><i style="background:#b394ff"></i>Custom · 160 m</span><span><i style="background:#f96b76"></i>Alarm</span></div>
+    </div>
+    <aside>
+      <div class="panel"><div class="eyebrow">MISSION TELEMETRY</div><div class="metrics"><div><span>Collected rows</span><strong id="rows">0</strong><small>Flushed to CSV on arrival</small></div><div><span>Simulation time</span><strong id="clock">0:00</strong><small id="progress">Waiting for collection</small></div></div><div class="progress-track"><div id="progress-bar"></div></div></div>
+      <div class="panel decision-panel"><div class="eyebrow">CURRENT RECOMMENDATION</div><h2 id="decision">AWAITING DATA</h2><p id="reason">Start a tour to collect readings from the field.</p><div class="mini-metrics"><span><b id="fresh">0</b> fresh stations</span><span><b id="alarms">0</b> alarms</span></div></div>
+      <div class="panel"><div class="eyebrow">LINK OUTCOMES</div><div id="link-stats"></div><p class="tiny">Out of range is separate from packet loss. Lines flash when a packet reaches the drone.</p></div>
+      <div class="panel"><div class="eyebrow">DATASET</div><p id="session">No session yet.</p><p class="tiny">Four features: temperature, humidity, smoke proxy, CO. Ground-truth labels are retained for training.</p><button id="training-preset">Prepare 15 mixed tours →</button></div>
+    </aside>
+  </section>
+  <section class="table-panel"><div class="table-heading"><div><div class="eyebrow">RECEIVED MEASUREMENTS</div><h2>Latest from each station</h2></div><span class="tiny">Stale after 30 simulated seconds · missing ≠ safe</span></div><div class="table-scroll"><table><thead><tr><th>STATION</th><th>LINK</th><th>TEMP °C</th><th>RH %</th><th>SMOKE PPM*</th><th>CO PPM</th><th>AGE</th><th>DECISION</th></tr></thead><tbody id="readings"><tr><td colspan="8">Waiting for the first collection…</td></tr></tbody></table></div></section>
+  <footer><span>Crazyflie mesh: gym-pybullet-drones (MIT) · Three.js renderer</span><span>Prescribed motion, enlarged drone, illustrative altitude. No flight dynamics or real radios. *Synthetic smoke proxy.</span></footer>
+</main>
+<script type="module" src="/app.js"></script>
+</body></html>
