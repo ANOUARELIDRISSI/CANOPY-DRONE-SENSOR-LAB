@@ -46,7 +46,7 @@ def metrics(y, predicted) -> dict:
     }
 
 
-def train(frame: pd.DataFrame, output: Path, seed: int = 42) -> dict:
+def train(frame: pd.DataFrame, output: Path, seed: int = 42, classifier: str = "auto") -> dict:
     splits = split_runs(frame, seed)
     parts = {name: frame[frame.run_id.isin(ids)] for name, ids in splits.items()}
     for name, part in parts.items():
@@ -72,6 +72,10 @@ def train(frame: pd.DataFrame, output: Path, seed: int = 42) -> dict:
             ),
         ),
     }
+    if classifier != "auto":
+        if classifier not in models:
+            raise ValueError("Unknown classifier")
+        models = {classifier: models[classifier]}
     report: dict = {
         "synthetic_only": True,
         "features": FEATURES,

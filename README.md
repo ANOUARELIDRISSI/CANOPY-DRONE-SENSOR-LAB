@@ -4,6 +4,10 @@ A runnable teaching baseline for **Real-Time Dashboard for Drone-Collected Data:
 
 The default scenario is forest-fire detection. Flood prediction is a student extension, not an implemented feature. No real drone, Bluetooth adapter, WiFi radio, ROS, Gazebo or database is needed. A live 3D viewer now uses the Crazyflie mesh from gym-pybullet-drones and streams newly generated sensor data into CSV.
 
+## Docker Compose
+
+Run `docker compose --profile camera up --build -d` from this folder. Open the viewer and click **Camera view**. See [the Compose guide](docs/COMPOSE.md) for batch collection, classifier selection, camera controls and model updates.
+
 ## Live 3D drone and streaming CSV
 
 After generating the first model with the command below, run:
@@ -12,13 +16,19 @@ After generating the first model with the command below, run:
 uv run drone-live --model artifacts/demo/model.joblib --port 8765
 ```
 
-Open [the 3D viewer](http://127.0.0.1:8765). Click **Start collection** and **Follow drone**. The drone moves through the scene while normalized sensor rows are appended to `artifacts/live/<session-id>/readings.csv`. **Download CSV** works during collection. For the next training step, use **Prepare 15 mixed tours**, wait for completion, then run:
+Open [the 3D viewer](http://127.0.0.1:8765). Click **Start collection** and **Follow**. The drone moves through the scene while normalized sensor rows are appended to `artifacts/live/<session-id>/readings.csv`. **Download CSV** works during collection. For the next training step, use **Prepare 15 mixed tours**, wait for completion, then run:
 
 ```powershell
 uv run drone-train --input artifacts/live/SESSION-ID/readings.csv --output artifacts/live-training
 ```
 
 Replace `SESSION-ID` with the displayed session. See [LIVE_3D.md](docs/LIVE_3D.md) for streaming semantics, the CSV contract and larger training runs. This is prescribed 3D motion using a real drone mesh, not a flight-dynamics simulation.
+
+## Configure a fleet
+
+Choose Forest, Meadow or Desert, set **Drones** (1-8) and **Tours per drone** (1-300). Under **Customize field and collection**, set field width (150-600 m), stations (6-60), vegetation and samples per tour. Preview before collecting. Presets affect synthetic temperature/humidity and appearance; vegetation changes scenery only.
+
+Drones start at different points on the same closed route. Each station attempts one transmission per sample to its nearest drone. The CSV identifies the collector in `drone_id` (zero-based; UI labels start at 1). All drones in a tour share a `run_id`. Select a drone and click **Follow**; drag to orbit and scroll, pinch, or use the +/- buttons to zoom. **Free orbit** releases the camera; **Overview** returns to the field.
 
 ## Reproduce the lab
 
@@ -33,7 +43,7 @@ uv run drone-lab --runs 90 --steps 120 --seed 42 --output artifacts/demo
 uv run drone-live --model artifacts/demo/model.joblib --port 8765
 ```
 
-This version is on branch `anouar00`. Open **http://127.0.0.1:8765**, click **Start collection**, then **Follow drone**. Use **Prepare 15 mixed tours** to collect a labeled training CSV. Stop the server with Ctrl+C.
+This version is on branch `anouar00`. Open **http://127.0.0.1:8765**, click **Start collection**, then **Follow**. Use **Prepare 15 mixed tours** to collect a labeled training CSV. Stop the server with Ctrl+C.
 
 Generated datasets, trained models, virtual environments and external repository clones are excluded from Git. The generation command above creates the first model locally. The required 3D mesh and JavaScript libraries are included, so Node.js, npm and the external simulator clones are not needed to run the viewer.
 

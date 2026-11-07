@@ -1,0 +1,9 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fire observation camera</title><link rel="stylesheet" href="/style.css"></head>
+<body><main><h1>Fire observation camera</h1>
+<div class="controls"><button id="example">Test fire image</button><button id="drone">Use selected drone</button><button id="webcam">Start webcam</button><label>Image or video<input id="file" type="file" accept="image/*,video/*"></label><button id="stop">Stop camera</button></div>
+<p id="status" role="status">Choose a source. Frames are processed locally on CPU.</p>
+<canvas id="frame" width="640" height="360" style="background:#17291f;max-width:100%;height:auto"></canvas>
+<p id="result"></p><video id="video" muted playsinline hidden></video>
+<p class="tiny">Example image from <a href="https://huggingface.co/datasets/LibreYOLO/fire-smoke-seg">LibreYOLO/fire-smoke-seg</a> (CC BY 4.0).</p><p>Detector classes: small flame and smoke. Frames with no detection are labeled accordingly.</p></main>
+<script type="module" src="/camera-view.js?v=vision2"></script></body></html>

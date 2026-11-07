@@ -72,29 +72,43 @@ def encode(protocol: str, values: list) -> dict:
 class SensorTour:
     """Incremental scenario model shared by batch generation and the live 3D service."""
 
-    def __init__(self, run: int, steps: int, seed: int, scenario: str | None = None):
+    def __init__(
+        self,
+        run: int,
+        steps: int,
+        seed: int,
+        scenario: str | None = None,
+        positions: np.ndarray | None = None,
+        temperature_offset: float = 0,
+        humidity_offset: float = 0,
+    ):
         self.run = run
         self.steps = steps
+        self.positions = layout() if positions is None else positions
+        count = len(self.positions)
         self.scenario = scenario or SCENARIOS[run % 3]
         if self.scenario not in SCENARIOS:
             raise ValueError("Unknown scenario")
         self.rng = np.random.default_rng(np.random.SeedSequence([seed, run]))
         self.onset = int(self.rng.integers(steps // 5, steps // 2))
-        self.affected = set(self.rng.choice(12, size=6, replace=False).tolist())
-        self.ambient = self.rng.normal(25, 5)
-        self.humidity = self.rng.uniform(40, 75)
-        self.bias = self.rng.normal(0, 1.5, size=12)
+        self.affected = set(self.rng.choice(count, size=count // 2, replace=False).tolist())
+        self.ambient = self.rng.normal(25, 5) + temperature_offset
+        self.humidity = self.rng.uniform(40, 75) + humidity_offset
+        self.bias = self.rng.normal(0, 1.5, size=count)
 
     def sample(self, step: int, drone: np.ndarray) -> list[dict]:
         rng, run, steps = self.rng, self.run, self.steps
         scenario, onset, affected = self.scenario, self.onset, self.affected
         ambient, humidity, bias = self.ambient, self.humidity, self.bias
-        positions = layout()
+        positions = self.positions
         records: list[dict] = []
         for sensor, position in enumerate(positions):
             protocol = list(LINKS)[sensor % 3]
             link = LINKS[protocol]
-            distance = float(np.linalg.norm(drone - position))
+            fleet = np.atleast_2d(drone)
+            distances = np.linalg.norm(fleet - position, axis=1)
+            collector = int(np.argmin(distances))
+            distance = float(distances[collector])
             active = sensor in affected and step >= onset
             label = int(scenario == "fire" and active)
             severity = min(1.0, max(0, (step - onset) / (steps * 0.3)))
@@ -141,6 +155,12 @@ class SensorTour:
                 "received_s": step * 2 + duration,
                 "payload": payload if status == "received" else None,
             }
+            if drone.ndim == 2:
+                record.update(
+                    drone_id=collector,
+                    drone_x_m=float(fleet[collector, 0]),
+                    drone_y_m=float(fleet[collector, 1]),
+                )
             records.append(record)
             if status == "received" and rng.random() < 0.01:
                 records.append(record.copy())

@@ -59,6 +59,11 @@ def test_live_matches_batch_and_has_training_labels(tmp_path, bundle):
     )
     assert live.status == "completed"
     assert live.counts == generated["counts"]
+    parts = sorted((live.output / "batches").glob("tour-*.csv"))
+    assert len(parts) == 15
+    pd.testing.assert_frame_equal(
+        pd.concat([pd.read_csv(path) for path in parts], ignore_index=True), streamed
+    )
     assert len(live.pending) == 0
     assert streamed.groupby("scenario").run_id.nunique().to_dict() == {
         "fire": 5,
@@ -110,3 +115,48 @@ def test_snapshot_does_not_carry_previous_tour_as_fresh(tmp_path, bundle):
     assert state["run_id"] == 1
     assert all(station["reading"] is None for station in state["stations"])
     session.close()
+
+
+def test_fleet_collects_each_sample_once_across_tours(tmp_path, bundle):
+    from drone_lab.environment import Environment
+
+    env = Environment("desert", 310, 18, 15)
+    session = StreamSession(
+        tmp_path / "fleet", bundle, runs=3, steps=30, scenario="mixed", drones=4, environment=env
+    )
+    state = session.advance(session.total_duration)
+    rows = pd.read_csv(session.output / "readings.csv")
+    assert rows.run_id.nunique() == 3 and rows.drone_id.nunique() == 4
+    assert not rows.duplicated(["run_id", "sensor_id", "sequence"]).any()
+    assert set(rows.environment) == {"desert"}
+    assert (
+        state["counts"]["lost"] + state["counts"]["received"] + state["counts"]["out_of_range"]
+        == 3 * 30 * 18
+    )
+    for row in rows.itertuples():
+        fleet = np.array([path[row.sequence] for path in session.paths])
+        distances = np.linalg.norm(fleet - session.positions[row.sensor_id], axis=1)
+        assert row.drone_id == np.argmin(distances)
+        assert row.distance_m == pytest.approx(distances.min(), abs=0.0001)
+    assert sum(d["collected"] for d in state["drones"]) == len(rows)
+
+
+def test_field_preview_without_creating_data(tmp_path, bundle):
+    with TestClient(create_app(Runtime(bundle, tmp_path / "sessions"))) as client:
+        response = client.post(
+            "/api/preview",
+            json={
+                "environment": "meadow",
+                "drones": 8,
+                "sensors": 60,
+                "field_width": 600,
+                "runs": 300,
+            },
+        )
+        assert response.status_code == 200
+        preview = response.json()
+        assert len(preview["drones"]) == 8 and len(preview["stations"]) == 60
+        assert preview["environment"]["width_m"] == 600
+        assert not (tmp_path / "sessions").exists()
+        for invalid in [{"drones": 9}, {"sensors": 0}, {"environment": "unknown"}]:
+            assert client.post("/api/preview", json=invalid).status_code == 422

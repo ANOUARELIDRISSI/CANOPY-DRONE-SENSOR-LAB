@@ -12,19 +12,28 @@
 <main>
   <div class="intro"><div><div class="eyebrow">LIVE COLLECTION</div><h1>A flight through the data.</h1><p>A 3D drone tour, heterogeneous sensors, and a dataset built as packets arrive.</p></div><div class="synthetic">SIMULATED ENVIRONMENT<br><span>Real streaming · synthetic measurements</span></div></div>
   <section class="controls" aria-label="Experiment controls">
+    <label>ENVIRONMENT<select id="environment"><option value="forest">Forest</option><option value="meadow">Meadow</option><option value="desert">Desert</option></select></label>
     <label>SCENARIO<select id="scenario"><option value="fire">Growing fire</option><option value="normal">Normal conditions</option><option value="nuisance">Nuisance smoke</option><option value="mixed">Mixed / training dataset</option></select></label>
-    <label>TOURS<input id="runs" type="number" min="1" max="300" value="1"></label>
-    <label>SEED<input id="seed" type="number" min="0" max="4294967295" value="42"></label>
+    <label>DRONES<input id="drones" type="number" min="1" max="8" value="1"></label>
+    <label>TOURS PER DRONE<input id="runs" type="number" min="1" max="300" value="1"></label>
+    <label><span>RANDOM SEED <input id="random-seed" type="checkbox" checked style="width:auto"></span><input id="seed" type="number" min="0" max="4294967295" value="42"></label>
     <label>SPEED<select id="speed"><option value="1">1× real time</option><option value="4" selected>4×</option><option value="16">16×</option><option value="64">64× accelerated</option></select></label>
     <button id="start" class="primary">Start collection <span>↗</span></button><button id="stop" disabled>Stop</button>
     <a id="download" class="download disabled" href="/api/download/readings.csv" download>↓ Download CSV</a>
   </section>
+  <details class="environment-settings"><summary>Customize field and collection</summary><div class="settings-grid">
+    <label>FIELD WIDTH (m)<input id="field-width" type="number" min="150" max="600" step="10" value="220"></label>
+    <label>SENSOR STATIONS<input id="sensors" type="number" min="6" max="60" value="12"></label>
+    <label>VEGETATION (0–100)<input id="vegetation" type="number" min="0" max="100" value="70"></label>
+    <label>SAMPLES PER TOUR<input id="steps" type="number" min="30" max="600" value="120"></label>
+    <button id="preview">Preview environment</button><span class="tiny">Settings apply to the next collection. All drones share each tour; the nearest drone collects each sensor sample once.</span>
+  </div></details>
   <div id="error" role="alert" hidden></div>
   <section class="workspace">
-    <div class="scene-card"><div class="scene-header"><div><span class="dot"></span> FIELD VIEW <span class="muted">/ 220 × 160 m</span></div><div class="view-buttons"><button id="overview">Overview</button><button id="follow">Follow drone</button></div></div>
+    <div class="scene-card"><div class="scene-header"><div><span class="dot"></span> FIELD VIEW <span class="muted" id="field-size">/ 220 × 160 m</span></div><div class="view-buttons"><select id="follow-select" aria-label="Drone to follow"><option value="0">Drone 1</option></select><button id="overview">Overview</button><button id="follow">Follow</button><button id="free">Free orbit</button><button id="zoom-in" aria-label="Zoom in">+</button><button id="zoom-out" aria-label="Zoom out">−</button><button id="open-camera">Camera view</button><button id="fullscreen">Full screen</button></div></div>
       <div id="scene" role="img" aria-label="Interactive 3D drone flying over twelve sensor stations"></div>
       <div class="scene-overlay"><div class="pill" id="flight-state">READY TO FLY</div><h2 id="tour-label">Tour 01</h2><div id="position-label">Fixed collection route</div></div>
-      <div class="scene-footer"><span id="model-status">Loading Crazyflie model…</span><span>Drag to orbit · scroll to zoom</span></div>
+      <div class="scene-footer"><span id="model-status">Loading Crazyflie model…</span><span id="camera-mode">Free orbit · wheel/pinch to zoom</span></div>
       <div class="legend"><span><i style="background:#51ccff"></i>Bluetooth · 35 m</span><span><i style="background:#ffbe6b"></i>WiFi · 100 m</span><span><i style="background:#b394ff"></i>Custom · 160 m</span><span><i style="background:#f96b76"></i>Alarm</span></div>
     </div>
     <aside>
@@ -34,8 +43,12 @@
       <div class="panel"><div class="eyebrow">DATASET</div><p id="session">No session yet.</p><p class="tiny">Four features: temperature, humidity, smoke proxy, CO. Ground-truth labels are retained for training.</p><button id="training-preset">Prepare 15 mixed tours →</button></div>
     </aside>
   </section>
-  <section class="table-panel"><div class="table-heading"><div><div class="eyebrow">RECEIVED MEASUREMENTS</div><h2>Latest from each station</h2></div><span class="tiny">Stale after 30 simulated seconds · missing ≠ safe</span></div><div class="table-scroll"><table><thead><tr><th>STATION</th><th>LINK</th><th>TEMP °C</th><th>RH %</th><th>SMOKE PPM*</th><th>CO PPM</th><th>AGE</th><th>DECISION</th></tr></thead><tbody id="readings"><tr><td colspan="8">Waiting for the first collection…</td></tr></tbody></table></div></section>
+  <section class="table-panel"><div class="table-heading"><div><div class="eyebrow">RECEIVED MEASUREMENTS</div><h2>Latest from each station</h2></div><span class="tiny">Stale after 30 simulated seconds · missing ≠ safe</span></div><div class="table-scroll"><table><thead><tr><th>STATION</th><th>COLLECTOR</th><th>LINK</th><th>TEMP °C</th><th>RH %</th><th>SMOKE PPM*</th><th>CO PPM</th><th>AGE</th><th>DECISION</th></tr></thead><tbody id="readings"><tr><td colspan="9">Waiting for the first collection…</td></tr></tbody></table></div></section>
   <footer><span>Crazyflie mesh: gym-pybullet-drones (MIT) · Three.js renderer</span><span>Prescribed motion, enlarged drone, illustrative altitude. No flight dynamics or real radios. *Synthetic smoke proxy.</span></footer>
 </main>
-<script type="module" src="/app.js"></script>
+<dialog id="camera-panel" style="width:min(900px,95vw);background:#14221d;color:#e7f0eb;border:1px solid #526a58">
+  <button id="close-camera">Close camera</button><p id="camera-help">Connecting to the CPU camera…</p>
+  <iframe id="camera-frame" title="Optional fire observation camera" allow="camera" style="border:0;width:100%;height:65vh"></iframe>
+</dialog>
+<script type="module" src="/app.js?v=vision2"></script>
 </body></html>

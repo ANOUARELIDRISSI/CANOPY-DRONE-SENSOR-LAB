@@ -1,0 +1,60 @@
+name: drone-sensor-lab
+x-lab: &lab
+  image: drone-sensor-lab:local
+  build:
+    context: .
+    dockerfile: docker/Dockerfile
+    target: lab
+  volumes:
+    - ./artifacts:/app/artifacts
+  environment:
+    OPENBLAS_NUM_THREADS: "1"
+    OMP_NUM_THREADS: "1"
+    CAMERA_PORT: "${CAMERA_PORT:-8766}"
+
+services:
+  init:
+    <<: *lab
+    command: python -m drone_lab.batches bootstrap
+  viewer:
+    <<: *lab
+    depends_on:
+      init:
+        condition: service_completed_successfully
+    command: drone-live --model artifacts/models/current.joblib --host 0.0.0.0 --port 8765
+    ports:
+      - "127.0.0.1:${VIEWER_PORT:-8765}:8765"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8765/api/state', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+  batch:
+    <<: *lab
+    profiles: [jobs]
+    entrypoint: [python, -m, drone_lab.batches, collect]
+  train:
+    <<: *lab
+    profiles: [jobs]
+    entrypoint: [python, -m, drone_lab.batches, train]
+  camera:
+    profiles: [camera]
+    image: drone-sensor-camera:local
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+      target: camera
+    volumes:
+      - ./artifacts:/app/artifacts
+    command: python -m drone_lab.vision --host 0.0.0.0 --port 8766
+    ports:
+      - "127.0.0.1:${CAMERA_PORT:-8766}:8766"
+    environment:
+      OMP_NUM_THREADS: "2"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8766/health', timeout=3)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 100s

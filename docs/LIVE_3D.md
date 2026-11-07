@@ -11,7 +11,7 @@ uv run drone-lab --output artifacts/demo
 uv run drone-live --model artifacts/demo/model.joblib --port 8765
 ```
 
-Open http://127.0.0.1:8765. Select a scenario and click **Start collection**, then **Follow drone** for a close view of the Crazyflie model. Drag to orbit, scroll to zoom, or use **Overview**. Sensors have physical markers in the scene, and transmission lines flash when received samples update the viewer. There is no CDN dependency. The server listens on localhost only.
+Open http://127.0.0.1:8765. Select a scenario and click **Start collection**, then **Follow** for a close view of the Crazyflie model. Drag to orbit, scroll to zoom, or use **Overview**. Sensors have physical markers in the scene, and transmission lines flash when received samples update the viewer. There is no CDN dependency. The server listens on localhost only.
 
 The live view uses an actual mesh from the cloned gym-pybullet-drones project. Movement follows the same path used in link-distance calculations, and the visual position comes from the server's simulation clock. This is a 3D kinematic visualization, not PyBullet dynamics: altitude is illustrative, the mesh is enlarged, and reception still uses 2D distance. See [asset provenance and licenses](THIRD_PARTY.md).
 
@@ -40,7 +40,7 @@ The download button returns a consistent snapshot of `readings.csv` even while i
 CSV columns:
 
 ```text
-run_id,sensor_id,sequence,time_s,received_s,elapsed_s,arrival_elapsed_s,
+run_id,sensor_id,drone_id,environment,sequence,time_s,received_s,elapsed_s,arrival_elapsed_s,
 scenario,protocol,distance_m,status,temperature_c,humidity_pct,smoke_ppm,
 co_ppm,fire_present,drone_x_m,drone_y_m,probability,decision,reason
 ```
@@ -73,3 +73,5 @@ To view new collections using the newly trained model, stop the server and resta
 - `GET /api/download/raw.jsonl` and `/api/download/manifest.json`: provenance downloads.
 
 One collection can run at a time. Invalid ranges are rejected and a second simultaneous start returns conflict. This is a local classroom service; authentication, multi-user storage, durable queues and network deployment are outside its current scope.
+
+Fleet collections support 1-8 drones flying synchronized tours. The nearest drone attempts each sensor sample once. `drone_id` is zero-based. The manifest records the environment and drone count. POST `/api/preview` with the same JSON as `/api/start` to preview geometry without writing files. Optional fields: `drones`, `environment` (forest/meadow/desert), `field_width`, `sensors`, `vegetation`.

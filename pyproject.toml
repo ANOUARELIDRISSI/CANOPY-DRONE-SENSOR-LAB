@@ -32,6 +32,12 @@ drone-lab = "drone_lab.cli:main"
 drone-live = "drone_lab.server:main"
 drone-train = "drone_lab.train_csv:main"
 
+[project.optional-dependencies]
+camera = [
+    "onnxruntime>=1.20,<2",
+    "pillow>=11",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/drone_lab"]
 

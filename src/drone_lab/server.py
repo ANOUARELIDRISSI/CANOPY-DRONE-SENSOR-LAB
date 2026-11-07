@@ -3,6 +3,8 @@
 import argparse
 import asyncio
 import json
+import os
+import secrets
 import threading
 import time
 import uuid
@@ -16,7 +18,8 @@ from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
-from drone_lab.simulation import layout, route
+from drone_lab.environment import Environment
+from drone_lab.simulation import LINKS
 from drone_lab.streaming import StreamSession
 
 
@@ -24,8 +27,13 @@ class StartRequest(BaseModel):
     scenario: str = "fire"
     runs: int = Field(default=1, ge=1, le=300)
     steps: int = Field(default=120, ge=30, le=600)
-    seed: int = Field(default=42, ge=0, le=2**32 - 1)
+    seed: int = Field(default_factory=lambda: secrets.randbits(32), ge=0, le=2**32 - 1)
     speed: float = Field(default=4, ge=0.25, le=64)
+    drones: int = Field(default=1, ge=1, le=8)
+    environment: str = "forest"
+    field_width: float = Field(default=220, ge=150, le=600)
+    sensors: int = Field(default=12, ge=6, le=60)
+    vegetation: int = Field(default=70, ge=0, le=100)
 
 
 class Runtime:
@@ -52,6 +60,10 @@ class Runtime:
                 options.runs,
                 options.steps,
                 options.scenario,
+                options.drones,
+                Environment(
+                    options.environment, options.field_width, options.sensors, options.vegetation
+                ),
             )
             self.stop_event.clear()
             self.speed = options.speed
@@ -89,13 +101,56 @@ class Runtime:
         with self.lock:
             if self.session:
                 return self.session.snapshot() | {"error": self.error, "speed": self.speed}
-            return {
-                "status": "idle",
-                "route": route(120).tolist(),
-                "stations": [
-                    {"id": i, "x": int(p[0]), "y": int(p[1])} for i, p in enumerate(layout())
-                ],
+            return preview_state(StartRequest()) | {"status": "idle"}
+
+
+def preview_state(options: StartRequest) -> dict:
+    environment = Environment(
+        options.environment, options.field_width, options.sensors, options.vegetation
+    )
+    paths = environment.paths(options.steps, options.drones)
+    return {
+        "status": "preview",
+        "session": None,
+        "seed": options.seed,
+        "steps": options.steps,
+        "environment": environment.to_dict(),
+        "drone_count": options.drones,
+        "route": paths[0].tolist(),
+        "runs": options.runs,
+        "run_id": 0,
+        "time_s": 0,
+        "elapsed_s": 0,
+        "total_s": options.runs * options.steps * 2,
+        "speed": options.speed,
+        "scenario_mode": options.scenario,
+        "scenario": options.scenario,
+        "drones": [
+            {
+                "id": i,
+                "position": path[0].tolist(),
+                "heading": 0,
+                "altitude_m": 14 + i * 2,
+                "collected": 0,
             }
+            for i, path in enumerate(paths)
+        ],
+        "stations": [
+            {
+                "id": i,
+                "x": float(point[0]),
+                "y": float(point[1]),
+                "protocol": list(LINKS)[i % 3],
+                "decision": "WARNING",
+                "age_s": None,
+                "in_range": False,
+                "reading": None,
+            }
+            for i, point in enumerate(environment.positions())
+        ],
+        "counts": {"received": 0, "lost": 0, "out_of_range": 0, "duplicates": 0},
+        "links": {name: {"received": 0, "lost": 0, "out_of_range": 0} for name in LINKS},
+    }
 
 
 def create_app(runtime: Runtime) -> FastAPI:
@@ -108,7 +163,7 @@ def create_app(runtime: Runtime) -> FastAPI:
 
     @app.get("/api/state")
     def state():
-        return runtime.snapshot()
+        return runtime.snapshot() | {"camera_port": int(os.getenv("CAMERA_PORT", "8766"))}
 
     @app.post("/api/start")
     def start(options: StartRequest):
@@ -122,11 +177,25 @@ def create_app(runtime: Runtime) -> FastAPI:
         runtime.stop()
         return runtime.snapshot()
 
+    @app.post("/api/preview")
+    def preview(options: StartRequest):
+        try:
+            return preview_state(options)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+
     @app.get("/api/events")
     async def events():
         async def frames():
             while True:
-                yield "data: " + json.dumps(runtime.snapshot(), allow_nan=False) + "\n\n"
+                yield (
+                    "data: "
+                    + json.dumps(
+                        runtime.snapshot() | {"camera_port": int(os.getenv("CAMERA_PORT", "8766"))},
+                        allow_nan=False,
+                    )
+                    + "\n\n"
+                )
                 await asyncio.sleep(0.2)
 
         return StreamingResponse(
@@ -160,11 +229,12 @@ def main() -> None:
     parser.add_argument("--model", type=Path, default=Path("artifacts/demo/model.joblib"))
     parser.add_argument("--output-root", type=Path, default=Path("artifacts/live"))
     parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--host", default="127.0.0.1")
     args = parser.parse_args()
     if not args.model.is_file():
         parser.error("Model not found. Run uv run drone-lab first or provide --model.")
     runtime = Runtime(joblib.load(args.model), args.output_root)
-    uvicorn.run(create_app(runtime), host="127.0.0.1", port=args.port)
+    uvicorn.run(create_app(runtime), host=args.host, port=args.port)
 
 
 if __name__ == "__main__":
