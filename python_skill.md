@@ -1,7 +1,6 @@
 
 # Python production practices
 
-The user's full guide is preserved in [references/python-best-practices.md](.agents/skills/python-production/references/python-best-practices.md). Read relevant sections when changing packaging, application architecture, services, security, or deployment.
 
 - Preserve the existing stack; use `uv`, `pyproject.toml`, and a committed `uv.lock`. Use `uv sync --locked --all-groups` to reproduce an environment. Do not install every tool listed in the reference.
 - Keep domain logic separate from external I/O. Use descriptive functions, type annotations at public boundaries, explicit configuration, and context managers.

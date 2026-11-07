@@ -74,4 +74,4 @@ The repository now contains a runnable forest-fire scenario: 12 stations, temper
 
 The live 3D viewer displays the Crazyflie mesh from gym-pybullet-drones using Three.js. Server simulation time drives the drone position and sensor sampling. Arrived packets are normalized, classified, appended to CSV and published as state updates through server-sent events. This is prescribed motion and planar link modeling, not real radio traffic or aerodynamic physics. A separate Streamlit view replays recorded experiments.
 
-Follow [README.md](README.md), [the student guide](Tasks.md), [the scenario specification](docs/SCENARIO.md), and [the live 3D guide](docs/LIVE_3D.md). Exact tested results and limits are recorded in [VALIDATION.md](docs/VALIDATION.md). Synthetic rows support reproducible training exercises; independent measured data is still required for real-world validation.
+See the [simulator guide](docs/SIMULATOR.md) for route planning, radio profiles and collection outputs.

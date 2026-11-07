@@ -8,7 +8,7 @@ Start with the [project overview](PROJECT_OVERVIEW.md), [student tasks and repor
 
 ## Docker Compose
 
-Run `docker compose --profile camera up --build -d` from this folder. Open the viewer and click **Camera view**. See [the Compose guide](docs/COMPOSE.md) for batch collection, classifier selection, camera controls and model updates.
+Run `docker compose --profile camera up --build -d` from this folder. Open the viewer and click **Camera view**. See [how the simulator works](docs/SIMULATOR.md).
 
 ## Live 3D drone and streaming CSV
 
@@ -24,7 +24,7 @@ Open [the 3D viewer](http://127.0.0.1:8765). Click **Start collection** and **Fo
 uv run drone-train --input artifacts/live/SESSION-ID/readings.csv --output artifacts/live-training
 ```
 
-Replace `SESSION-ID` with the displayed session. See [LIVE_3D.md](docs/LIVE_3D.md) for streaming semantics, the CSV contract and larger training runs. This is prescribed 3D motion using a real drone mesh, not a flight-dynamics simulation.
+Replace `SESSION-ID` with the displayed session. See [the simulator guide](docs/SIMULATOR.md) for route and collection details. This is prescribed 3D motion using a real drone mesh, not a flight-dynamics simulation.
 
 ## Configure a fleet
 
@@ -101,11 +101,8 @@ flowchart LR
 | `simulation/src/drone_lab/web/` | 3D drone, forest, station markers and telemetry controls |
 | `simulation/dashboard.py` | Streamlit replay with moving drone and current station status |
 | `simulation/tests/` | Behavior and integration checks |
-| `docs/SCENARIO.md` | Exact assumptions, units and interpretation |
-| `docs/VALIDATION.md` | Commands executed, measured results and limitations |
-| `docs/UPSTREAM.md` | Optional UavNetSim clone and tested analytical-mode command |
+| `docs/SIMULATOR.md` | Exact assumptions, units and interpretation |
 | `Tasks.md` | Student phases, commands, deliverables and acceptance criteria |
-| `.agents/skills/python-production/` | Reusable Python skill and the supplied full reference guide |
 
 Each generated output folder contains `raw.jsonl`, `manifest.json`, `readings.csv`, `tour_summary.csv`, `train.csv`, `validation.csv`, `test.csv`, `model.joblib`, `metrics.json`, `decisions.csv`, and `overview.png`. IDs and labels remain in CSVs for auditing; train only with the feature allowlist in `analytics.py`. Load only model files you trust: joblib is not a safe interchange format for untrusted uploads.
 
@@ -124,4 +121,3 @@ uv run mypy src
 uv run pytest -q
 ```
 
-Use [the Python skill](.agents/skills/python-production/SKILL.md) for future Python work. The stack is intentionally small: additional service, database, Docker and security infrastructure should follow actual requirements.

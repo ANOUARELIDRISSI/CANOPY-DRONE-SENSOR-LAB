@@ -12,7 +12,7 @@ The viewer's scoring engine assigns an ordinal inspection priority, not a probab
 | data/starter/ | Completed synthetic session distributed for the first exercises |
 | artifacts/ | Local Compose outputs: new batches, live sessions and trained models |
 | python_skill.md | Python engineering practices for students |
-| docs/ | [Compose runbook](docs/COMPOSE.md), [scenario assumptions](docs/SCENARIO.md), and [original project brief](PROJECT_BRIEF.md) at the repository root |
+| docs/ | [How the simulator works](docs/SIMULATOR.md) |
 
 Run from the repository root: docker compose --profile camera up --build -d --wait. Open http://127.0.0.1:8765. Omit the camera profile for sensor-only operation. Native Python development commands run inside simulation/. Native outputs are relative to that directory unless an explicit output path is supplied.
 
